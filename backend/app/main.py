@@ -6,6 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.main import api_router
 from app.core.config import settings
 from app.admin import setup_admin
+from app.initial_data import init as init_data
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
@@ -35,3 +36,9 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Set up SQLAdmin dashboard
 setup_admin(app)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the database on startup"""
+    init_data()
