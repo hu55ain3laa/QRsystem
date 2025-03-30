@@ -10,21 +10,77 @@ from app.models import (
     History
 )
 from app.core.db import engine
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request, HTTPException
 from app.core.security import get_password_hash
 from sqlmodel import Session
 from wtforms import Form, StringField, BooleanField, PasswordField
+from starlette.responses import RedirectResponse
+from sqladmin.authentication import AuthenticationBackend
+from app.crud import authenticate
+import jwt
+from app.core.security import ALGORITHM
+from app.core.config import settings
 
 # Function to get a database session
 def get_session():
     with Session(engine) as session:
         yield session
 
+# Custom authentication backend for the admin panel
+class AdminAuth(AuthenticationBackend):
+    async def login(self, request: Request) -> bool:
+        form = await request.form()
+        email = form.get("username")
+        password = form.get("password")
+        
+        # Validate credentials using existing authentication method
+        with Session(engine) as session:
+            user = authenticate(session=session, email=email, password=password)
+            
+            if not user:
+                return False
+            
+            # Check if user is active and has admin privileges
+            if not user.is_active or not user.is_superuser:
+                return False
+            
+            # Set the user ID in the session
+            request.session["user_id"] = str(user.id)
+            return True
+    
+    async def logout(self, request: Request) -> bool:
+        # Clear session data
+        request.session.clear()
+        return True
+    
+    async def authenticate(self, request: Request) -> bool:
+        # Check if user is authenticated through session
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return False
+        
+        # Validate that the user still exists in the database
+        with Session(engine) as session:
+            user = session.get(User, user_id)
+            if not user or not user.is_active or not user.is_superuser:
+                return False
+            
+        return True
+
 def setup_admin(app: FastAPI) -> None:
     """
     Configure and setup SQLAdmin dashboard
     """
-    admin = Admin(app, engine)
+    # Create authentication backend
+    authentication_backend = AdminAuth(secret_key=settings.SECRET_KEY)
+    
+    # Initialize admin with authentication
+    admin = Admin(
+        app, 
+        engine,
+        authentication_backend=authentication_backend,
+        title="QR System Admin"
+    )
 
     class UserAdmin(ModelView, model=User):
         column_list = ["id", "email", "is_active", "is_superuser", "full_name"]

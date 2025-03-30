@@ -2,6 +2,7 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import RedirectResponse
 
 from app.api.main import api_router
 from app.core.config import settings
@@ -10,7 +11,8 @@ from app.initial_data import init as init_data
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
-    return f"{route.tags[0]}-{route.name}"
+    tag = route.tags[0] if route.tags else "default"
+    return f"{tag}-{route.name}"
 
 
 if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
@@ -42,3 +44,9 @@ setup_admin(app)
 async def startup_event():
     """Initialize the database on startup"""
     init_data()
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Redirect root to admin panel"""
+    return RedirectResponse(url="/admin")
