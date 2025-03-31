@@ -22,6 +22,20 @@ dependencies = [
     "pydantic-settings<3.0.0,>=2.2.1",
     "sentry-sdk[fastapi]<2.0.0,>=1.40.6",
     "pyjwt<3.0.0,>=2.8.0",
+    # Additional required packages
+    "requests<3.0.0,>=2.32.3",
+    "sqlalchemy<3.0.0,>=2.0.35",
+    "uvicorn<1.0.0,>=0.30.6",
+    "python-dotenv<2.0.0,>=1.0.1",
+    "sqladmin<1.0.0,>=0.20.1",
+    "premailer<4.0.0,>=3.10.0",
+    "lxml<6.0.0,>=5.3.0",
+    "cssselect<2.0.0,>=1.2.0",
+    "cssutils<3.0.0,>=2.11.1",
+    "websockets<14.0.0,>=13.1",
+    "uvloop<1.0.0,>=0.20.0",
+    "watchfiles<1.0.0,>=0.24.0",
+    "WTForms<4.0.0,>=3.1.2",
 ]
 
 [tool.uv]
@@ -32,6 +46,9 @@ dev-dependencies = [
     "pre-commit<4.0.0,>=3.6.2",
     "types-passlib<2.0.0.0,>=1.7.7.20240106",
     "coverage<8.0.0,>=7.4.3",
+    "fastapi-cli<1.0.0,>=0.0.5",
+    "rich<14.0.0,>=13.8.1",
+    "typer<1.0.0,>=0.12.5",
 ]
 
 [build-system]
