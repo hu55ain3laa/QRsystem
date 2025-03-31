@@ -24,3 +24,8 @@ Make sure your editor is using the correct Python virtual environment, with the 
 ## To run
 
 use `fastapi run --reload`
+
+The admin User
+
+admin@admin.com
+admin123
