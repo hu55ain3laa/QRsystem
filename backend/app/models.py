@@ -280,6 +280,7 @@ class HistoryTypePublic(HistoryTypeBase):
 class HistoryBase(SQLModel):
     type_id: int = Field(foreign_key="history_types.id")
     datetime: datetime
+    entity_id : int
 
 
 class HistoryCreate(HistoryBase):
@@ -289,6 +290,7 @@ class HistoryCreate(HistoryBase):
 class HistoryUpdate(HistoryBase):
     type_id: Optional[int] = None
     datetime: Optional[datetime] = None
+    entity_id : int
 
 
 class History(HistoryBase, table=True):

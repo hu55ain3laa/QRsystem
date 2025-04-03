@@ -117,7 +117,8 @@ def init() -> None:
                 type_id=random.choice(history_types).id,
                 datetime=datetime.now() - timedelta(days=random.randint(1, 30), 
                                                    hours=random.randint(1, 23), 
-                                                   minutes=random.randint(1, 59))
+                                                   minutes=random.randint(1, 59)),
+                                                   entity_id=1
             )
             session.add(history)
         session.commit()
