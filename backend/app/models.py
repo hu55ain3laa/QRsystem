@@ -118,7 +118,6 @@ class ApartmentInfoBase(SQLModel):
     building: int
     floor: int
     apt_no: int
-    user_id: int
     area: int
     meter_price: int
     full_price: int
@@ -132,7 +131,6 @@ class ApartmentInfoUpdate(ApartmentInfoBase):
     building: Optional[int] = None
     floor: Optional[int] = None
     apt_no: Optional[int] = None
-    user_id: Optional[int] = None
     area: Optional[int] = None
     meter_price: Optional[int] = None
     full_price: Optional[int] = None

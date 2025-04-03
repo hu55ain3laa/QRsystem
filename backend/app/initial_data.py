@@ -64,7 +64,6 @@ def init() -> None:
                 building=random.randint(1, 5),
                 floor=random.randint(1, 10),
                 apt_no=i * 100 + random.randint(1, 10),
-                user_id=1,  # Assuming the first user (admin) is the default owner
                 area=random.randint(80, 200),
                 meter_price=random.randint(1000, 3000),
                 full_price=random.randint(80000, 600000)

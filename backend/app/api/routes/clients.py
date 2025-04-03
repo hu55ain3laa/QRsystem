@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select
+from fastapi import APIRouter, HTTPException, Query
+from sqlmodel import func, select, or_, and_
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -10,6 +10,7 @@ from app.models import (
     ClientInfoPublic,
     ClientInfoUpdate,
     Message,
+    ApartmentInfo,
 )
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -24,6 +25,59 @@ def read_clients(
     """
     statement = select(ClientInfo).offset(skip).limit(limit)
     clients = session.exec(statement).all()
+    return clients
+
+
+@router.get("/filter", response_model=list[ClientInfoPublic])
+def filter_clients(
+    session: SessionDep,
+    current_user: CurrentUser,
+    name: Optional[str] = None,
+    id_no: Optional[int] = None,
+    phone_number: Optional[str] = None,
+    building: Optional[int] = None,
+    floor: Optional[int] = None,
+    apt_no: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    Filter clients by name, ID number, phone number, and apartment information.
+    """
+    # Start with a base query joining ClientInfo with ApartmentInfo
+    query = select(ClientInfo).join(ApartmentInfo, ClientInfo.apt_id == ApartmentInfo.id)
+    
+    # Apply filters based on provided parameters
+    filters = []
+    
+    if name:
+        filters.append(ClientInfo.name.contains(name))
+    
+    if id_no:
+        filters.append(ClientInfo.id_no == id_no)
+    
+    if phone_number:
+        filters.append(ClientInfo.phone_number.contains(phone_number))
+    
+    # Apartment filters
+    if building:
+        filters.append(ApartmentInfo.building == building)
+    
+    if floor:
+        filters.append(ApartmentInfo.floor == floor)
+    
+    if apt_no:
+        filters.append(ApartmentInfo.apt_no == apt_no)
+    
+    # Apply all filters if any exist
+    if filters:
+        query = query.where(and_(*filters))
+    
+    # Apply pagination
+    query = query.offset(skip).limit(limit)
+    
+    # Execute query and return results
+    clients = session.exec(query).all()
     return clients
 
 
@@ -107,4 +161,4 @@ def delete_client(session: SessionDep, current_user: CurrentUser, id: int) -> Me
     
     session.delete(client)
     session.commit()
-    return Message(message="Client deleted successfully") 
+    return Message(message="Client deleted successfully")
