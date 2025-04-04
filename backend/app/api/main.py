@@ -10,7 +10,8 @@ from app.api.routes import (
     clients, 
     payment_types, 
     payments, 
-    history
+    history,
+    combined_operations
 )
 from app.core.config import settings
 
@@ -24,6 +25,7 @@ api_router.include_router(clients.router)
 api_router.include_router(payment_types.router)
 api_router.include_router(payments.router)
 api_router.include_router(history.router)
+api_router.include_router(combined_operations.router)
 
 
 if settings.ENVIRONMENT == "local":
