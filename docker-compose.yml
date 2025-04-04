@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - db-data:/app/data
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=production
+      - PROJECT_NAME=QR System
+      - SQLITE_DB_NAME=data/sql_app.db
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  db-data: 
