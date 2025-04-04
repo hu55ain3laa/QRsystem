@@ -58,6 +58,7 @@ docker-compose exec backend bash
 
 ```bash
 # Install dependencies and create virtual environment with uv
+uv venv .venv
 uv sync
 
 # Run venv
