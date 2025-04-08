@@ -66,7 +66,8 @@ def init() -> None:
                 apt_no=i * 100 + random.randint(1, 10),
                 area=random.randint(80, 200),
                 meter_price=random.randint(1000, 3000),
-                full_price=random.randint(80000, 600000)
+                full_price=random.randint(80000, 600000),
+                apt_type=random.choice(["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3", "D1", "D2", "D3"])
             )
             session.add(apt)
             apartments.append(apt)

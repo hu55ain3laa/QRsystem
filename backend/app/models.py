@@ -121,6 +121,7 @@ class ApartmentInfoBase(SQLModel):
     area: int
     meter_price: int
     full_price: int
+    apt_type: str
 
 
 class ApartmentInfoCreate(ApartmentInfoBase):
@@ -134,6 +135,7 @@ class ApartmentInfoUpdate(ApartmentInfoBase):
     area: Optional[int] = None
     meter_price: Optional[int] = None
     full_price: Optional[int] = None
+    apt_type: Optional[str] = None
 
 
 class ApartmentInfo(ApartmentInfoBase, table=True):
