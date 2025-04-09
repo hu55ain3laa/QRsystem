@@ -37,6 +37,10 @@ dependencies = [
     "watchfiles<1.0.0,>=0.24.0",
     "WTForms<4.0.0,>=3.1.2",
     "itsdangerous<3.0.0,>=2.1.2",
+    "xhtml2pdf<1.0.0,>=0.2.12",
+    # PDF generation dependencies
+    "playwright<2.0.0,>=1.40.0",
+    "PyPDF2<4.0.0,>=3.0.0",
 ]
 
 [tool.uv]
