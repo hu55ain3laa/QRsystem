@@ -44,9 +44,9 @@
         <h1>‌آلية التسديد</h1>
         <div class="payment">
             <ul>
-                <li>مساحة الوحدة السكنية : 153م<sup>2</sup></li>
+                <li>مساحة الوحدة السكنية : {{ data.area }}م<sup>2</sup></li>
                 <li>سعر المتر المربع : {{ data.price }}</li>
-                <li>السعر الكلي : {{ data.price * 153 }}</li>
+                <li>السعر الكلي : {{ data.price * data.area }}</li>
             </ul>
         </div>
         <hr style="width: 100%;">

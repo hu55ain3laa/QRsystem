@@ -12,6 +12,25 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
+    fonts-dejavu \
+    fonts-freefont-ttf \
+    fontconfig \
+    # Dependencies for Playwright and PDF generation
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxi6 \
+    libxtst6 \
+    libnss3 \
+    libcups2 \
+    libxss1 \
+    libxrandr2 \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libpangocairo-1.0-0 \
+    libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -20,6 +39,12 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Copy project files
 COPY . .
+
+# Install Python dependencies
+RUN pip install -r requirements.txt
+
+# Install Playwright browsers
+RUN playwright install chromium
 
 # Create data directory for SQLite database
 RUN mkdir -p /app/data

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import random
 
 from sqlmodel import Session, select
@@ -61,13 +61,12 @@ def init() -> None:
         apartments = []
         for i in range(1, 6):
             apt = ApartmentInfo(
-                building=random.randint(1, 5),
-                floor=random.randint(1, 10),
-                apt_no=i * 100 + random.randint(1, 10),
+                building=str(random.randint(1, 5)),
+                floor=str(random.randint(1, 10)),
+                apt_no=str(i * 100 + random.randint(1, 10)),
                 area=random.randint(80, 200),
                 meter_price=random.randint(1000, 3000),
-                full_price=random.randint(80000, 600000),
-                apt_type=random.choice(["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3", "D1", "D2", "D3"])
+                apt_type=random.choice(["A1",'A2','A3','A4','B1','B2','B3','B4','B5','B6'])
             )
             session.add(apt)
             apartments.append(apt)
@@ -80,11 +79,14 @@ def init() -> None:
                 client = ClientInfo(
                     name=f"Client {apt.id}-{j}",
                     id_no=random.randint(1000000, 9999999),
-                    issue_date=datetime.now() - timedelta(days=random.randint(1, 1000)),
+                    issue_date=date.today() - timedelta(days=random.randint(1, 1000)),
+                    no=random.randint(1, 1000),
                     m=random.choice(["Cairo", "Alexandria", "Giza"]),
                     z=random.choice(["Zone A", "Zone B", "Zone C"]),
                     d=random.choice(["District 1", "District 2", "District 3"]),
                     phone_number=f"+201{random.randint(10000000, 99999999)}",
+                    registry_no=f'{random.randint(1000,10000)}',
+                    newspaper_no=f'{random.randint(1,1000)}',
                     job_title=random.choice(["Engineer", "Doctor", "Teacher", "Lawyer", "Accountant"]),
                     alt_name=f"Alternative {apt.id}-{j}",
                     alt_kinship=random.choice(["Spouse", "Parent", "Sibling", "Child"]),
@@ -92,6 +94,7 @@ def init() -> None:
                     alt_m=random.randint(1, 5),
                     alt_z=random.randint(1, 5),
                     alt_d=random.randint(1, 5),
+                    created_at=date.today(),
                     apt_id=apt.id
                 )
                 session.add(client)

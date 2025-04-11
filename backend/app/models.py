@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Union, List, Optional
 
 from pydantic import EmailStr
@@ -115,12 +115,11 @@ class NewPassword(SQLModel):
 
 # Apartment related models
 class ApartmentInfoBase(SQLModel):
-    building: int
+    building: str
     floor: int
     apt_no: int
     area: int
     meter_price: int
-    full_price: int
     apt_type: str
 
 
@@ -134,7 +133,6 @@ class ApartmentInfoUpdate(ApartmentInfoBase):
     apt_no: Optional[int] = None
     area: Optional[int] = None
     meter_price: Optional[int] = None
-    full_price: Optional[int] = None
     apt_type: Optional[str] = None
 
 
@@ -152,11 +150,14 @@ class ApartmentInfoPublic(ApartmentInfoBase):
 class ClientInfoBase(SQLModel):
     name: str
     id_no: int
-    issue_date: datetime
+    issue_date: date
+    no: int = Field(unique=True)
     m: str
     z: str
     d: str
     phone_number: str
+    registry_no : str
+    newspaper_no : str
     job_title: str
     alt_name: str
     alt_kinship: str
@@ -164,6 +165,7 @@ class ClientInfoBase(SQLModel):
     alt_m: int
     alt_z: int
     alt_d: int
+    created_at: date = Field(default=date.today())
     apt_id: int = Field(foreign_key="apartment_info.id")
 
 
@@ -174,11 +176,14 @@ class ClientInfoCreate(ClientInfoBase):
 class ClientInfoUpdate(ClientInfoBase):
     name: Optional[str] = None
     id_no: Optional[int] = None
-    issue_date: Optional[datetime] = None
+    no: Optional[int] = None
+    issue_date: Optional[date] = None
     m: Optional[str] = None
     z: Optional[str] = None
     d: Optional[str] = None
     phone_number: Optional[str] = None
+    registry_no : Optional[str] = None
+    newspaper_no : Optional[str] = None
     job_title: Optional[str] = None
     alt_name: Optional[str] = None
     alt_kinship: Optional[str] = None
@@ -186,6 +191,7 @@ class ClientInfoUpdate(ClientInfoBase):
     alt_m: Optional[int] = None
     alt_z: Optional[int] = None
     alt_d: Optional[int] = None
+    created_at: Optional[date] = None
     apt_id: Optional[int] = None
 
 

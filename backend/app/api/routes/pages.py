@@ -1,5 +1,7 @@
 from typing import Any
-from fastapi import APIRouter, Request, Response
+from app.core import db
+from app.models import ApartmentInfo, ClientInfo, Payment
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import StreamingResponse
 import io
@@ -11,57 +13,75 @@ import tempfile
 import os
 import asyncio
 from playwright.async_api import async_playwright
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser
+from sqlmodel import Session, select
 
 router = APIRouter(prefix="/pages", tags=["pages"])
 
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/")
-def read_pages(request : Request) -> Any:
-    data = {
-        "id": "1"+ " : " + "العدد",
-        "buildng": "A1"+ " | " + "العمارة",
-        "floor": "00"+ " | " + "الطابق",
-        "apartment": "02"+ " | " + "الشقة"
-    }
+def read_pages(request : Request, no : int, apt_id : int) -> Any:
+    with Session(db.engine) as session:
+        obj = session.exec(select(ApartmentInfo).where(ApartmentInfo.id == apt_id)).first()
+        if not obj:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        data = {
+            "id": str(no).zfill(3)+ " : " + "العدد",
+            "buildng": str(obj.building)+ " | " + "العمارة",
+            "floor": str(obj.floor)+ " | " + "الطابق",
+            "apartment": str(obj.apt_type)+ " | " + "الشقة"
+        }
     return templates.TemplateResponse("page/page1.html", {"request": request, "data": data})
 
 @router.get("/page2")
-def read_page2(request : Request) -> Any:
-    data = {
-        "date": "19.11.2022",
-        "id": "002",
-        "customer_name": "محمد علي علي",
-        "unified_card_number": "1234567890",
-        "id_number": "1234567890",
-        "registry_number": "1234567890",
-        "newspaper_number": "1234567890",
-        "issue_date": "19.11.2022",
-        "district": "محلة",
-        "street": "زقاق",
-        "house": "دار",
-        "alt_district": "محلة",
-        "alt_street": "زقاق",
-        "alt_house": "دار",
-        "phone_number": "01234567890",
-        "job_title": "وظيفة",
-        "alt_person_name": "محمد علي علي",
-        "relationship": "والد",
-        "alt_person_number": "1234567890"
+def read_page2(request : Request, client_id : int) -> Any:
+    with Session(db.engine) as session:
+        client_info = session.exec(select(ClientInfo).where(ClientInfo.id == client_id)).first()
+        if not client_info:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        data = {
+            "date": client_info.created_at,
+            "id": str(client_info.no).zfill(3),
+            "customer_name": client_info.name,
+            "unified_card_number": client_info.id_no,
+            "id_number": client_info.id_no,
+            "registry_number": client_info.registry_no,
+            "newspaper_number": client_info.newspaper_no,
+            "issue_date": client_info.issue_date,
+            "district": client_info.m,
+            "street": client_info.z,
+            "house": client_info.d,
+            "alt_district": client_info.m,
+            "alt_street": client_info.z,
+            "alt_house": client_info.d,
+            "phone_number": client_info.phone_number,
+            "job_title": client_info.job_title,
+            "alt_person_name": client_info.alt_name,
+            "relationship": client_info.alt_kinship,
+            "alt_person_number": client_info.alt_phone
     }
     return templates.TemplateResponse("page/page2.html", {"request": request, "data": data})
 
 @router.get("/page3")
-def read_page3(request : Request) -> Any:
-    data = {
-        "id": "002",
-        "date": "19.11.2022",
-        "apartment_number": "02",
-        "building": "A1",
-        "floor": "00",
-        "apartment": "02"
-    }
+def read_page3(request : Request, apt_id : int) -> Any:
+    with Session(db.engine) as session:
+        apartment_info = session.exec(select(ApartmentInfo).where(ApartmentInfo.id == apt_id)).first()
+        if not apartment_info:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        client_info = session.exec(select(ClientInfo).where(ClientInfo.apt_id == apt_id)).first()
+        if not client_info:
+            raise HTTPException(status_code=404, detail="Client not found")
+        data = {
+            "id": str(client_info.no).zfill(3),
+            "date": client_info.created_at,
+            "apartment_number": apartment_info.apt_no,
+            "building": apartment_info.building,
+            "floor": apartment_info.floor,
+            "apartment": apartment_info.apt_type,
+            "area": apartment_info.area
+        }
     return templates.TemplateResponse("page/page3.html", {"request": request, "data": data})
 
 @router.get("/page4")
@@ -81,168 +101,188 @@ def read_page7(request : Request) -> Any:
     return templates.TemplateResponse("page/page7.html", {"request": request})
 
 @router.get("/page8")
-def read_page8(request : Request) -> Any:
-    data = {
-        'aptType' : 'A1'
-    }
+def read_page8(request : Request, apt_id : int) -> Any:
+    with Session(db.engine) as session:
+        apartment_info = session.exec(select(ApartmentInfo).where(ApartmentInfo.id == apt_id)).first()
+        if not apartment_info:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        data = {
+            'aptType' : apartment_info.apt_type
+        }
     return templates.TemplateResponse("page/page8.html", {"request": request , 'data': data})
 
 @router.get("/page9")
-def read_page9(request : Request) -> Any:
-    data = {
-        'aptType' : 'A1'
-    }
+def read_page9(request : Request, apt_id : int) -> Any:
+    with Session(db.engine) as session:
+        apartment_info = session.exec(select(ApartmentInfo).where(ApartmentInfo.id == apt_id)).first()
+        if not apartment_info:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        data = {
+            'aptType' : apartment_info.apt_type
+        }
     return templates.TemplateResponse("page/page9.html", {"request": request , 'data': data})
 
 @router.get("/page10")
-def read_page10(request : Request) -> Any:
-    data = {
-        'price' : 1000000
-    }
+def read_page10(request : Request, apt_id : int) -> Any:
+    with Session(db.engine) as session:
+        apartment_info = session.exec(select(ApartmentInfo).where(ApartmentInfo.id == apt_id)).first()
+        if not apartment_info:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        data = {
+            'price' : apartment_info.meter_price,
+            'area' : apartment_info.area
+        }
     return templates.TemplateResponse("page/page10.html", {"request": request , 'data': data})
 
-async def capture_page_pdfs(base_url: str, page_endpoints: list[str], output_dir: str) -> list[str]:
-    """
-    Capture PDFs of each page directly using Playwright.
+# async def capture_page_pdfs(base_url: str, page_endpoints: list[str], output_dir: str) -> list[str]:
+#     """
+#     Capture PDFs of each page directly using Playwright.
     
-    Args:
-        base_url: The base URL of the application
-        page_endpoints: List of page endpoints to capture
-        output_dir: Directory to save the PDFs
+#     Args:
+#         base_url: The base URL of the application
+#         page_endpoints: List of page endpoints to capture
+#         output_dir: Directory to save the PDFs
         
-    Returns:
-        List of paths to the saved PDFs
-    """
-    pdf_paths = []
+#     Returns:
+#         List of paths to the saved PDFs
+#     """
+#     pdf_paths = []
     
-    async with async_playwright() as p:
-        # Launch browser
-        browser = await p.chromium.launch(headless=True)
+#     async with async_playwright() as p:
+#         # Launch browser
+#         browser = await p.chromium.launch(headless=True)
         
-        # Create a high-quality context
-        context = await browser.new_context(
-            viewport={"width": 1280, "height": 1696},  # Wide enough for A4
-            device_scale_factor=2.0,  # Higher quality rendering
-            is_mobile=False,
-            has_touch=False,
-            ignore_https_errors=True
-        )
+#         # Create a high-quality context
+#         context = await browser.new_context(
+#             viewport={"width": 1280, "height": 1696},  # Wide enough for A4
+#             device_scale_factor=2.0,  # Higher quality rendering
+#             is_mobile=False,
+#             has_touch=False,
+#             ignore_https_errors=True
+#         )
         
-        # Enable console logging
-        page = await context.new_page()
-        page.on("console", lambda msg: print(f"BROWSER LOG: {msg.text}"))
-        page.on("pageerror", lambda err: print(f"BROWSER ERROR: {err}"))
+#         # Enable console logging
+#         page = await context.new_page()
+#         page.on("console", lambda msg: print(f"BROWSER LOG: {msg.text}"))
+#         page.on("pageerror", lambda err: print(f"BROWSER ERROR: {err}"))
         
-        for i, endpoint in enumerate(page_endpoints):
-            try:
-                full_url = f"{base_url.rstrip('/')}{endpoint}"
-                print(f"Navigating to: {full_url}")
+#         for i, endpoint in enumerate(page_endpoints):
+#             try:
+#                 full_url = f"{base_url.rstrip('/')}{endpoint}"
+#                 print(f"Navigating to: {full_url}")
                 
-                # Navigate to the page with longer timeout
-                response = await page.goto(full_url, wait_until="networkidle", timeout=30000)
+#                 # Navigate to the page with longer timeout
+#                 response = await page.goto(full_url, wait_until="networkidle", timeout=30000)
                 
-                # Check if the navigation was successful
-                if response.status >= 400:
-                    print(f"Error loading page {endpoint}: HTTP {response.status}")
-                    # Create a simple error PDF
-                    pdf_path = os.path.join(output_dir, f"page_{i+1}_error.pdf")
-                    # Use reportlab to create an error PDF
-                    from reportlab.pdfgen import canvas
-                    c = canvas.Canvas(pdf_path, pagesize=A4)
-                    c.drawString(100, 500, f"Error loading page: HTTP {response.status}")
-                    c.save()
-                    pdf_paths.append(pdf_path)
-                    continue
+#                 # Check if the navigation was successful
+#                 if response.status >= 400:
+#                     print(f"Error loading page {endpoint}: HTTP {response.status}")
+#                     # Create a simple error PDF
+#                     pdf_path = os.path.join(output_dir, f"page_{i+1}_error.pdf")
+#                     # Use reportlab to create an error PDF
+#                     from reportlab.pdfgen import canvas
+#                     c = canvas.Canvas(pdf_path, pagesize=A4)
+#                     c.drawString(100, 500, f"Error loading page: HTTP {response.status}")
+#                     c.save()
+#                     pdf_paths.append(pdf_path)
+#                     continue
                 
-                # Wait a bit for any JavaScript to finish rendering
-                await asyncio.sleep(2)
+#                 # Wait a bit for any JavaScript to finish rendering
+#                 await asyncio.sleep(2)
                 
-                # Optimize the page for PDF printing
-                await page.evaluate("""() => {
-                    document.body.style.width = '210mm';
-                    document.body.style.height = '297mm';
-                    document.body.style.margin = '0';
-                    document.body.style.padding = '0';
-                    document.documentElement.style.width = '210mm';
-                    document.documentElement.style.height = '297mm';
-                    document.documentElement.style.margin = '0';
-                    document.documentElement.style.padding = '0';
+#                 # Optimize the page for PDF printing
+#                 await page.evaluate("""() => {
+#                     document.body.style.width = '210mm';
+#                     document.body.style.height = '297mm';
+#                     document.body.style.margin = '0';
+#                     document.body.style.padding = '0';
+#                     document.documentElement.style.width = '210mm';
+#                     document.documentElement.style.height = '297mm';
+#                     document.documentElement.style.margin = '0';
+#                     document.documentElement.style.padding = '0';
                     
-                    // Force all elements to properly fit
-                    const allElements = document.querySelectorAll('*');
-                    for (const el of allElements) {
-                        if (el.style.position === 'fixed' || el.style.position === 'absolute') {
-                            el.style.maxWidth = '210mm';
-                        }
-                    }
+#                     // Force all elements to properly fit
+#                     const allElements = document.querySelectorAll('*');
+#                     for (const el of allElements) {
+#                         if (el.style.position === 'fixed' || el.style.position === 'absolute') {
+#                             el.style.maxWidth = '210mm';
+#                         }
+#                     }
                     
-                    // Set print-specific CSS
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        @media print {
-                            body {
-                                width: 210mm;
-                                height: 297mm;
-                                margin: 0;
-                                padding: 0;
-                            }
-                            * {
-                                page-break-inside: avoid;
-                            }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }""")
+#                     // Set print-specific CSS
+#                     const style = document.createElement('style');
+#                     style.textContent = `
+#                         @media print {
+#                             body {
+#                                 width: 210mm;
+#                                 height: 297mm;
+#                                 margin: 0;
+#                                 padding: 0;
+#                             }
+#                             * {
+#                                 page-break-inside: avoid;
+#                             }
+#                         }
+#                     `;
+#                     document.head.appendChild(style);
+#                 }""")
                 
-                # Generate a PDF directly
-                pdf_path = os.path.join(output_dir, f"page_{i+1}.pdf")
-                await page.pdf(
-                    path=pdf_path,
-                    format="A4",
-                    print_background=True,
-                    prefer_css_page_size=True,
-                    margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"},
-                    scale=1.0  # No scaling
-                )
+#                 # Generate a PDF directly
+#                 pdf_path = os.path.join(output_dir, f"page_{i+1}.pdf")
+#                 await page.pdf(
+#                     path=pdf_path,
+#                     format="A4",
+#                     print_background=True,
+#                     prefer_css_page_size=True,
+#                     margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"},
+#                     scale=1.0  # No scaling
+#                 )
                 
-                pdf_paths.append(pdf_path)
-                print(f"PDF saved: {pdf_path}")
+#                 pdf_paths.append(pdf_path)
+#                 print(f"PDF saved: {pdf_path}")
                 
-            except Exception as e:
-                print(f"Error capturing {endpoint}: {str(e)}")
-                # Create a simple error PDF
-                pdf_path = os.path.join(output_dir, f"page_{i+1}_error.pdf")
-                # Use reportlab to create an error PDF
-                from reportlab.pdfgen import canvas
-                c = canvas.Canvas(pdf_path, pagesize=A4)
-                c.drawString(100, 500, f"Error: {str(e)}")
-                c.save()
-                pdf_paths.append(pdf_path)
+#             except Exception as e:
+#                 print(f"Error capturing {endpoint}: {str(e)}")
+#                 # Create a simple error PDF
+#                 pdf_path = os.path.join(output_dir, f"page_{i+1}_error.pdf")
+#                 # Use reportlab to create an error PDF
+#                 from reportlab.pdfgen import canvas
+#                 c = canvas.Canvas(pdf_path, pagesize=A4)
+#                 c.drawString(100, 500, f"Error: {str(e)}")
+#                 c.save()
+#                 pdf_paths.append(pdf_path)
         
-        await browser.close()
+#         await browser.close()
     
-    return pdf_paths
+#     return pdf_paths
 
-@router.get("/direct-pdf")
-async def generate_direct_pdf(request: Request) -> Any:
+@router.get("/Generate-pdf/{client_id}")
+async def generate_direct_pdf(request: Request, client_id: int, current_user: CurrentUser) -> Any:
     """
-    Alternative endpoint that renders templates directly to PDFs.
+    Endpoint that renders templates directly to PDFs.
     Uses in-memory rendering and Playwright to generate PDFs.
     """
+    with Session(db.engine) as session:
+        client_info = session.exec(select(ClientInfo).where(ClientInfo.id == client_id)).first()
+        if not client_info:
+            raise HTTPException(status_code=404, detail="Client not found")
+        apartment_info = session.exec(select(ApartmentInfo).where(ApartmentInfo.id == client_info.apt_id)).first()
+        if not apartment_info:
+            raise HTTPException(status_code=404, detail="Apartment not found")
     # Create a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         # List of functions and parameters to render each page
         page_renderers = [
-            (read_pages, {}),
-            (read_page2, {}),
-            (read_page3, {}),
+            (read_pages, {"no": client_info.no, "apt_id": apartment_info.id}),
+            (read_page2, {"client_id": client_info.id}),
+            (read_page3, {"apt_id": apartment_info.id}),
             (read_page4, {}),
             (read_page5, {}),
             (read_page6, {}),
             (read_page7, {}),
-            (read_page8, {}),
-            (read_page9, {}),
-            (read_page10, {})
+            (read_page8, {"apt_id": apartment_info.id}),
+            (read_page9, {"apt_id": apartment_info.id}),
+            (read_page10, {"apt_id": apartment_info.id})
         ]
         
         # Generate HTML and PDFs for each page
